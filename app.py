@@ -18,12 +18,8 @@ from numbers_parser import Document
 
 APP_VERSION = "2026-04-09_session_position_boxbooklet_v5"
 
-# ★ Position固定順
 POSITION_ORDER = ["GK", "CB", "SB", "MF", "SH", "FW"]
 
-# =========================
-# Plot tuning
-# =========================
 POINT_ALPHA = 0.25
 LABEL_ALPHA = 0.55
 POINT_SIZE = 22
@@ -38,14 +34,31 @@ STREAMLIT_FILE_TYPES = ["csv", "xlsx", "xls", "numbers"]
 _ZERO_WIDTH = ["\u200b", "\u200c", "\u200d", "\ufeff"]
 
 
-# =========================
-# Matplotlib: 日本語フォント自動設定
-# =========================
 def configure_matplotlib_japanese_font():
     try:
         import matplotlib
-        from matplotlib import font_manager as fm
+        import matplotlib.font_manager as fm
+        import subprocess
 
+        # Linux環境でfclistから日本語フォントパスを取得
+        try:
+            result = subprocess.run(
+                ["fc-list", ":lang=ja", "--format=%{file}\n"],
+                capture_output=True, text=True, timeout=10
+            )
+            font_files = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+            if font_files:
+                fm.fontManager.addfont(font_files[0])
+                prop = fm.FontProperties(fname=font_files[0])
+                matplotlib.rcParams["font.family"] = prop.get_name()
+                matplotlib.rcParams["axes.unicode_minus"] = False
+                matplotlib.rcParams["pdf.fonttype"] = 42
+                matplotlib.rcParams["ps.fonttype"] = 42
+                return
+        except Exception:
+            pass
+
+        # フォールバック：フォント名で検索
         preferred = [
             "IPAexGothic", "IPAGothic",
             "Noto Sans CJK JP", "Noto Sans JP",
@@ -68,6 +81,8 @@ def configure_matplotlib_japanese_font():
 
 
 configure_matplotlib_japanese_font()
+
+
 
 
 # =========================
